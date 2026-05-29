@@ -1,0 +1,32 @@
+// 小清新全局主题
+@forward 'element-plus/theme-chalk/src/common/var.scss' with (
+  $colors: (
+    // 主色：任选一个
+    primary: (
+      base: #58c9b9, // 薄荷绿（推荐）
+      // base: #a78bfa, // 淡粉紫
+      // base: #74b9ff, // 雾霾蓝
+      // base: #82d984, // 浅青柠
+    ),
+
+    // 辅助色：全部统一小清新
+    success: (base: #76d49c),
+    warning: (base: #f8c377),
+    danger: (base: #f98f94),
+    info: (base: #a9b3d2)
+  ),
+
+  // 圆角更小更精致（小清新必备）
+  $border-radius: (
+    base: 6px,
+  ),
+
+  // 阴影更轻更柔和
+  $box-shadow: (
+    light: 0 2px 4px rgba(0, 0, 0, 0.06),
+    base: 0 2px 8px rgba(0, 0, 0, 0.08),
+    dark: 0 4px 16px rgba(0, 0, 0, 0.1)
+  )
+);
+
+@use 'element-plus/theme-chalk/src/index.scss' as *;
