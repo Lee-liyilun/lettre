@@ -5,7 +5,7 @@
             <p>保持热爱，奔赴山海</p>
         </header>
         <div class="menu-main">
-            <el-row :gutter="10">
+            <el-row :gutter="20">
                 <el-col 
                     v-for="(item, index) in menuList"
                     :key="index"
@@ -34,16 +34,14 @@
 </template>
 
 <script setup>
-import { useRouter } from 'vue-router' // 引入路由
-// 1. 先把 assets 里的图片通过 import 引入进来
+import { useRouter } from 'vue-router' 
 import markImg from '@/assets/images/mark.png'
 import cipherImg from '@/assets/images/cipher.png'
 import saveImg from '@/assets/images/save.png'
 import calcImg from '@/assets/images/calc.png'
 
-const router = useRouter() // 获取路由实例
+const router = useRouter() 
 
-// 定义你的菜单数据
 const menuList = [
   { name: "印记", url: "/mark", image: markImg },
   { name: "密语", url: "/cipher", image: cipherImg },
@@ -51,112 +49,80 @@ const menuList = [
   { name: "简财", url: "/calc", image: calcImg },
 ]
 
-// 定义跳转方法，接收点击项的 url
 const goToPage = (url) => {
-  router.push(url) // 编程式导航跳转到对应路径
+  router.push(url) 
 }
 </script>
 
-<style>
-/* 只隐藏垂直（右侧）滚动条，保留水平（底部）滚动条 */
-body, html {
-  /* 确保页面可以正常滚动 */
-  overflow: auto !important;
-
-  /* 针对 Chrome, Safari, Edge 等 Webkit 内核浏览器 */
-  &::-webkit-scrollbar {
-    width: 0 !important;      /* 将垂直滚动条的宽度压缩为0，彻底隐藏右侧 */
-    height: 12px !important;  /* 明确保留水平滚动条的高度，显示底部 */
-  }
-  /* 给水平滚动条的滑块加个颜色，防止看不见 */
-  &::-webkit-scrollbar-thumb {
-    background-color: #ccc;
-    border-radius: 6px;
-  }
-  /* 给水平滚动条的轨道加个底色 */
-  &::-webkit-scrollbar-track {
-    background-color: #f1f1f1;
-  }
-
-  /* 针对 Firefox 浏览器（Firefox 只能整体隐藏，无法单独保留横向） */
-  scrollbar-width: none !important;
-  /* 针对 IE 和旧版 Edge */
-  -ms-overflow-style: none !important;
-}
-</style>
 <style scoped>
-/* 1. 修改页面容器，加上渐变背景 */
+/* 1. 页面容器：换成了更有“小清新”感的浅青绿色背景 */
 .page-container {
   min-height: 100vh;
-  /* 从极淡的薄荷绿（带了一点透明度）平滑过渡到纯白 */
-  background: linear-gradient(to bottom, rgba(216, 243, 220, 0.4), #ffffff);
+  /* 从清新的薄荷绿渐变到稍微深一点的青绿色，更有层次感 */
+  background: linear-gradient(135deg, #e0f2f1 0%, #b2dfdb 100%);
   padding-bottom: 40px;
+  /* 仅针对当前页面隐藏滚动条 */
+  overflow-y: auto;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
 }
-
-/* 2. 全局隐藏右侧滚动条（但保留滚动功能） */
-/* 兼容 Chrome, Safari, Edge 等 Webkit 内核浏览器 */
 .page-container::-webkit-scrollbar {
-  display: none; 
-}
-/* 兼容 Firefox 浏览器 */
-.page-container {
-  scrollbar-width: none; 
-}
-/* 兼容 IE 和旧版 Edge */
-.page-container {
-  -ms-overflow-style: none; 
+  display: none; /* Chrome/Safari */
 }
 
-/* 4. .page-header 恢复成普通的头部样式，去掉背景渐变 */
+/* 2. 头部样式：加深了文字颜色，让它在浅色背景上更突出 */
 .page-header {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 60px 0 40px;
+  padding: 70px 0 50px;
   text-align: center;
 }
 
-/* 标题样式 */
 .page-header h1 {
   margin: 0 0 12px;
-  font-size: 36px;
-  color: #1b4332;
-  font-weight: 600;
-  letter-spacing: 4px;
+  font-size: 38px;
+  color: #004d40; /* 深墨绿色，色差明显 */
+  font-weight: 700;
+  letter-spacing: 6px;
 }
 
-/* 副标题/标语样式 */
 .page-header p {
   margin: 0;
   font-size: 15px;
-  color: #52b788;
-  letter-spacing: 2px;
-  font-weight: 400;
+  color: #00796b; /* 中绿色 */
+  letter-spacing: 3px;
+  font-weight: 500;
+}
+ 
+.menu-main {
+  padding: 10px 40px; /* 增加两侧留白 */
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
-/* 卡片基础样式 */
+/* 3. 卡片基础样式：纯白背景，与青绿色背景形成鲜明对比 */
 .menu-card {
   cursor: pointer;
-  margin-bottom: 20px;
-  border-radius: 16px !important;
-  border: none !important;
-  background-color: #ffffff; /* 纯白卡片在浅绿背景下色差非常明显 */
-  box-shadow: 0 6px 16px rgba(27, 67, 50, 0.08);
-  transition: all 0.4s ease;
+  margin-bottom: 25px;
+  border-radius: 20px !important; /* 更大的圆角，更柔和 */
+  border: 1px solid rgba(255, 255, 255, 0.6) !important; /* 加一点半透明白边框，增加精致感 */
+  background-color: #ffffff; /* 纯白卡片 */
+  box-shadow: 0 8px 20px rgba(0, 77, 64, 0.08); /* 带一点绿色的阴影 */
+  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
-/* 鼠标悬停时的卡片效果 */
+/* 鼠标悬停效果 */
 .menu-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 15px 30px rgba(27, 67, 50, 0.2) !important;
+  transform: translateY(-8px) scale(1.02); /* 上浮并轻微放大 */
+  box-shadow: 0 18px 35px rgba(0, 77, 64, 0.15) !important;
 }
 
-/* 穿透修改 Element Plus 卡片默认内边距 */
+/* 修改 Element Plus 卡片内边距 */
 :deep(.el-card__body) {
-  padding: 30px 20px !important;
+  padding: 35px 20px !important;
 }
 
-/* 让内容垂直排列并居中 */
 .card-content {
   display: flex;
   flex-direction: column;
@@ -164,27 +130,47 @@ body, html {
   justify-content: center;
 }
 
-/* 圆形图片样式 */
+/* 4. 图片样式：加了个浅绿色的底托，更有层次 */
 .card-image {
-  width: 70px;
-  height: 70px;
+  width: 75px;
+  height: 75px;
   border-radius: 50%;
-  margin-bottom: 16px;
+  margin-bottom: 18px;
   object-fit: cover;
   transition: transform 0.5s ease;
-  background-color: #f0fdf4;
+  background-color: #e0f2f1; /* 图片底色与背景呼应 */
+  padding: 5px; /* 增加一点内边距，像相框一样 */
+  box-sizing: border-box;
 }
 
-/* 鼠标悬停时图片旋转 */
 .menu-card:hover .card-image {
-  transform: rotate(20deg);
+  transform: rotate(15deg) scale(1.1);
 }
 
-/* 文字样式 */
 .card-name {
-  font-size: 16px;
-  color: #40916c;
-  font-weight: 500;
-  letter-spacing: 1px;
+  font-size: 17px;
+  color: #00695c; /* 深青色文字 */
+  font-weight: 600;
+  letter-spacing: 2px;
+}
+</style>
+
+<!-- 全局滚动条样式（建议单独放在一个全局 CSS 文件里，如果必须放这里请保持这样） -->
+<style>
+body, html {
+  margin: 0;
+  padding: 0;
+}
+/* 仅针对 Webkit 浏览器隐藏垂直滚动条但保留水平 */
+body::-webkit-scrollbar {
+  width: 0 !important;
+  height: 8px !important;
+}
+body::-webkit-scrollbar-thumb {
+  background-color: #b2dfdb;
+  border-radius: 4px;
+}
+body::-webkit-scrollbar-track {
+  background-color: #e0f2f1;
 }
 </style>
