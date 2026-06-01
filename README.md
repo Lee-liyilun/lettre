@@ -36,8 +36,17 @@ $env:TAURI_SIGNING_PRIVATE_KEY = Get-Content C:\Users\10729\.tauri\lettre.key -R
 $env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD = ""
 ```
 
-## 打 tag 推送（触发自动打包发布）
+## 自动打包发布
 ```
+1、修改版本号
+src-tauri/tauri.conf.json
+
+2、提交代码
+git add .
+git commit -m 'v0.1.1'
+git push github master:main
+
+3、打tag推送
 git tag v0.2.0
 git push github v0.2.0
 ```
