@@ -9,12 +9,12 @@ pub fn get_db_path() -> PathBuf {
     // 你的应用数据目录（优雅、标准、安全、有权限）
     let app_data = home.join("lettre");
     let db_dir = app_data.join("db");
-    
+
     // 如果目录不存在，创建目录
     if !db_dir.exists() {
         fs::create_dir_all(&db_dir).unwrap();
     }
-    
+
     db_dir.join("lettre.db")
 }
 
@@ -29,33 +29,33 @@ fn needs_initialization(conn: &Connection) -> bool {
             [table_name],
             |row| row.get(0),
         );
-        
+
         match result {
             Ok(count) => {
                 if count == 0 {
                     // 只要有一个表不存在，就需要初始化
                     return true;
                 }
-            },
-            Err(_) => return true,  // 查询失败也进行初始化
+            }
+            Err(_) => return true, // 查询失败也进行初始化
         }
     }
-    
-    false  // 所有表都存在，不需要初始化
+
+    false // 所有表都存在，不需要初始化
 }
 
 // 初始化数据库并返回连接
 pub fn init_db() -> Connection {
     let db_path = get_db_path();
     let db_exists = db_path.exists();
-    
+
     let conn = Connection::open(&db_path).unwrap();
-    
+
     // 只有当数据库文件不存在或表不存在时才初始化
     if !db_exists || needs_initialization(&conn) {
         initialize_tables(&conn);
     }
-    
+
     conn
 }
 
@@ -70,8 +70,9 @@ fn initialize_tables(conn: &Connection) {
             update_time TEXT DEFAULT (datetime('now', 'localtime'))
         )",
         [],
-    ).unwrap();
-    
+    )
+    .unwrap();
+
     // 创建 mark 表
     conn.execute(
         "CREATE TABLE IF NOT EXISTS mark (
@@ -84,5 +85,6 @@ fn initialize_tables(conn: &Connection) {
             FOREIGN KEY (project_id) REFERENCES project(project_id)
         )",
         [],
-    ).unwrap();
+    )
+    .unwrap();
 }

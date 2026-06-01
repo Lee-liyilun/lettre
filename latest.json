@@ -1,0 +1,11 @@
+{
+  "version": "0.1.0",
+  "notes": "自动更新",
+  "pub_date": "2026-06-01T10:14:00Z",
+  "platforms": {
+    "windows-x86_64": {
+      "url": "https://ghproxy.net/https://github.com/Lee-liyilun/lettre/releases/download/v0.1.0/Lettre_0.1.0_x64-setup.exe",
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTQVBiS3hsK25XUWlicVY4TnNubUsyK0xjbk1pN05hQzljNnRFWHd2TjhHdnZyeHNRZ1ZLSmN1cVFqV0RaNkJsNnByRWp6RzYvWWlBME5RNUhQL2w0TTZ0WUJUMmFpUmdzPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzgwMjc5ODkyCWZpbGU6TGV0dHJlXzAuMS4wX3g2NC1zZXR1cC5leGUKTUR1MkFTWlg2VVRHSklEYzRtQkZTTlNsUHRob0J4dUlRR3NIa2t5K2ZCNzFzZUFiOVdRZzQxazNGdlhoQ2xIM0hTZFhXWWVtdW8xTlZDdlArNk1qQXc9PQo="
+    }
+  }
+}

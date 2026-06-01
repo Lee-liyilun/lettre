@@ -31,4 +31,13 @@ apt install -y libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev l
 npm run tauri build
 
 如果提示找不到命令，也可以直接使用 cargo tauri build
+签名
+$env:TAURI_SIGNING_PRIVATE_KEY = Get-Content C:\Users\10729\.tauri\lettre.key -Raw
+$env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD = ""
+```
+
+## 打 tag 推送（触发自动打包发布）
+```
+git tag v0.2.0
+git push github v0.2.0
 ```
