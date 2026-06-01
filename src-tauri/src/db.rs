@@ -4,14 +4,11 @@ use std::path::PathBuf;
 
 // 获取数据库路径
 pub fn get_db_path() -> PathBuf {
-    let app_dir = std::env::current_exe()
-        .unwrap()
-        .parent()
-        .unwrap()
-        .parent()
-        .unwrap()
-        .to_path_buf();
-    let db_dir = app_dir.join("data").join("db");
+    // 获取用户目录（跨平台：Windows ~ Linux ~ macOS）
+    let home = dirs::data_dir().unwrap();
+    // 你的应用数据目录（优雅、标准、安全、有权限）
+    let app_data = home.join("lettre");
+    let db_dir = app_data.join("db");
     
     // 如果目录不存在，创建目录
     if !db_dir.exists() {
