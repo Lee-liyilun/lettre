@@ -19,7 +19,7 @@ pub fn get_db_path() -> PathBuf {
 }
 
 // 定义所有需要初始化的表名
-const REQUIRED_TABLES: &[&str] = &["project", "mark"];
+const REQUIRED_TABLES: &[&str] = &["project", "mark", "cipher"];
 
 // 检查数据库是否需要初始化（所有必需的表是否都存在）
 fn needs_initialization(conn: &Connection) -> bool {
@@ -87,4 +87,17 @@ fn initialize_tables(conn: &Connection) {
         [],
     )
     .unwrap();
+
+    // 创建 cipher 表
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS cipher (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            company TEXT,
+            content BLOB NOT NULL,  -- 加密存储
+            create_time TEXT DEFAULT (datetime('now', 'localtime')),
+            update_time TEXT DEFAULT (datetime('now', 'localtime'))
+        )",
+        [],
+    ).unwrap();
 }
