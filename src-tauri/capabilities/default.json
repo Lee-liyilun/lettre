@@ -7,9 +7,19 @@
     "core:default",
     "opener:default",
     "updater:default",
-    "dialog:allow-open",
-    "dialog:allow-save",
+    "process:default",
+    "dialog:default",
+    "dialog:allow-ask",
+    "fs:default",
     "fs:allow-read-file",
-    "fs:allow-write-file"
+    "fs:allow-write-file",
+    {
+      "identifier": "fs:allow-read-text-file",
+      "allow": [{ "path": "$APPDATA/**" }]
+    },
+    {
+      "identifier": "fs:allow-write-text-file",
+      "allow": [{ "path": "$APPDATA/**" }]
+    }
   ]
 }

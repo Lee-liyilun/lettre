@@ -50,7 +50,7 @@ jobs:
             "pub_date": "$(Get-Date -Format 'o')",
             "platforms": {
               "windows-x86_64": {
-                "url": "https://ghproxy.net/https://github.com/$repo/releases/download/v$tag/$exe",
+                "url": "https://github.com/$repo/releases/download/v$tag/$exe",
                 "signature": "$sig"
               }
             }

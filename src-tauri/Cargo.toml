@@ -29,6 +29,7 @@ rand = { version = "0.10.1", features = ["std"] }
 tauri-plugin-dialog = "2.7.1"
 tauri-plugin-fs = "2.5.1"
 tauri-plugin-log = "2.8.0"
+tauri-plugin-process = "2.3.1"
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-updater = "2"
