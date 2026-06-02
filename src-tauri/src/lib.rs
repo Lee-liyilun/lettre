@@ -4,6 +4,8 @@
 mod db;
 mod modules;
 
+use tauri_plugin_updater;
+
 // 导出给前端使用
 pub use modules::cipher::*;
 pub use modules::mark::*;
@@ -13,6 +15,8 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_fs::init())
         .invoke_handler(tauri::generate_handler![
             // Mark 模块
             modules::mark::get_all_projects,
@@ -36,8 +40,6 @@ pub fn run() {
             modules::cipher::generate_first_key,
             modules::cipher::check_key_exists,
         ])
-        .plugin(tauri_plugin_dialog::init())
-        .plugin(tauri_plugin_fs::init())
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

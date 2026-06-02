@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Lettre",
-  "version": "0.2.0",
+  "version": "0.1.0",
   "identifier": "com.nsxsg.lettre",
   "build": {
     "beforeDevCommand": "npm run dev",
@@ -39,7 +39,8 @@
       "dialog": true,
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDQyRDZFOTk3QjFCMjNEODAKUldTQVBiS3hsK25XUWpVZFN2bmRuNThFalVVa3djckxTTTRxVDYvS3Z5SU5sc1U4Q2crT1c3RjQK",
       "endpoints": [
-        "https://ghproxy.net/https://github.com/Lee-liyilun/lettre/releases/latest/download/latest.json"
+        "https://gitee.com/wasco/lettre/releases/download/latest/latest.json",
+        "https://github.com/Lee-liyilun/lettre/releases/latest/download/latest.json"
       ]
     }
   }

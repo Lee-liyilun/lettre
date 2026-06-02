@@ -30,6 +30,15 @@
                 </el-col>
             </el-row>
         </div>
+
+        <!-- 底部页脚 -->
+        <footer class="page-footer">
+          <p>
+            <span>© 2026 {{ author }}</span>
+            <span class="divider">|</span>
+            <span class="version">v{{ appVersion }}</span>
+          </p>
+        </footer>
     </div>
 </template>
 
@@ -39,6 +48,9 @@ import markImg from '@/assets/images/mark.png'
 import cipherImg from '@/assets/images/cipher.png'
 import saveImg from '@/assets/images/save.png'
 import calcImg from '@/assets/images/calc.png'
+
+// 引入 package.json 获取版本号
+import packageJson from '@/../package.json'
 
 const router = useRouter() 
 
@@ -52,6 +64,10 @@ const menuList = [
 const goToPage = (url) => {
   router.push(url) 
 }
+
+// 定义作者和获取版本号
+const author = "1072966772@qq.com" // 可以在这里修改作者名
+const appVersion = packageJson.version
 </script>
 
 <style scoped>

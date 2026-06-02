@@ -35,7 +35,7 @@ $env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD = ""
 ```
 1、修改版本号
 src-tauri/tauri.conf.json
-package.json（可以不改，强迫症除外）
+package.json
 
 2、提交代码
 git add .

@@ -1,0 +1,90 @@
+name: Sync Release to Gitee
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 配置变量与下载 latest.json
+        run: |
+          # 1. 提取 GitHub 版本号 (去掉 'v' 前缀)
+          # 假设 tag 是 v0.1.0, 处理后得到 0.1.0
+          TAG_NAME=${GITHUB_REF#refs/tags/v}
+          
+          # 2. 定义仓库路径
+          # 注意：这里需要手动指定 Gitee 的路径，因为和 GitHub 不同
+          GITHUB_REPO="Lee-liyilun/lettre"
+          GITEE_REPO="wasco/lettre" # 👈👈 修改为你的 Gitee 路径
+          
+          # 3. 下载 GitHub Release 中的 latest.json
+          # 使用 -L 跟随重定向，-o 指定输出文件名
+          echo "正在从 GitHub 下载 latest.json (版本: $TAG_NAME)..."
+          curl -L -o latest.json "https://github.com/${GITHUB_REPO}/releases/latest/download/latest.json"
+          
+          # 4. 关键：修改 latest.json 内容
+          # 将旧的下载地址模式替换为新的 Gitee 地址模式
+          # 原内容可能包含: "url": "https://github.com/Lee-liyilun/lettre/releases/download/v0.1.0/xxx.exe"
+          # 需要替换为:   "url": "https://gitee.com/wasco/lettre/releases/download/v0.1.0/xxx.exe"
+          echo "正在修改 latest.json 中的下载链接..."
+          sed -i "s|github.com/${GITHUB_REPO}|gitee.com/${GITEE_REPO}|g" latest.json
+          
+          # 5. 输出文件内容用于调试 (确认替换成功)
+          echo "修改后的 latest.json 内容:"
+          cat latest.json
+
+      - name: 🚀 上传到 Gitee Release
+        run: |
+          # 重新定义变量 (因为上一步 run 环境是隔离的)
+          TAG_NAME=${GITHUB_REF#refs/tags/v}
+          GITHUB_REPO="Lee-liyilun/lettre"
+          GITEE_REPO="wasco/lettre" # 👈👈 保持一致
+          
+          # 1. 调用 Gitee API 创建 Release
+          echo "正在创建 Gitee Release (版本: v${TAG_NAME})..."
+          curl -X POST "https://gitee.com/api/v5/repos/${GITEE_REPO}/releases" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"access_token\": \"${{ secrets.GITEE_TOKEN }}\",
+              \"tag_name\": \"v${TAG_NAME}\",
+              \"name\": \"Release v${TAG_NAME}\",
+              \"body\": \"Synced from GitHub\",
+              \"target_commitish\": \"main\"
+            }" || echo "警告: Release 可能已存在，将继续上传文件"
+
+      - name: 📤 下载资产并上传到 Gitee
+        run: |
+          TAG_NAME=${GITHUB_REF#refs/tags/v}
+          GITHUB_REPO="Lee-liyilun/lettre"
+          GITEE_REPO="wasco/lettre"
+          
+          # 1. 上传修改后的 latest.json
+          echo "正在上传修改后的 latest.json 到 Gitee..."
+          curl -X POST "https://gitee.com/api/v5/repos/${GITEE_REPO}/releases/v${TAG_NAME}/attach_files" \
+            -F "access_token=${{ secrets.GITEE_TOKEN }}" \
+            -F "file=@latest.json"
+          
+          # 2. 下载 GitHub Release 中的所有资产文件 (.exe, .sig 等)
+          echo "正在从 GitHub 下载发布资产..."
+          # 安装 hub 工具
+          wget https://github.com/github/hub/releases/download/v2.14.2/hub-linux-amd64-2.14.2.tgz
+          tar -xvzf hub-linux-amd64-2.14.2.tgz
+          export PATH="$PWD/hub-linux-amd64-2.14.2/bin:$PATH"
+          
+          # 使用 hub 下载指定版本的所有 Release 附件
+          # -p 指定保存的目录前缀
+          hub release download "v${TAG_NAME}" -p "assets" -R "${GITHUB_REPO}"
+          
+          # 3. 将下载的文件上传到 Gitee
+          echo "正在将资产上传到 Gitee..."
+          # 遍历 assets 目录下的所有文件
+          for file in assets/*; do
+            if [ -f "$file" ]; then
+              echo "上传文件: $file"
+              curl -X POST "https://gitee.com/api/v5/repos/${GITEE_REPO}/releases/v${TAG_NAME}/attach_files" \
+                -F "access_token=${{ secrets.GITEE_TOKEN }}" \
+                -F "file=@$file"
+            fi
+          done
