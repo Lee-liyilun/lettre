@@ -169,6 +169,28 @@ const appVersion = packageJson.version
   font-weight: 600;
   letter-spacing: 2px;
 }
+/* 底部页脚样式 */
+.page-footer {
+  text-align: center;
+  padding: 20px 0;
+  margin-top: 20px;
+  color: #00796b; /* 与你页面副标题颜色保持一致 */
+  font-size: 13px;
+  letter-spacing: 1px;
+  opacity: 0.8; /* 轻微透明，更有质感 */
+}
+
+.page-footer .divider {
+  margin: 0 10px;
+  opacity: 0.5;
+}
+
+.page-footer .version {
+  font-family: monospace; /* 版本号用等宽字体，更有科技感 */
+  background-color: rgba(0, 121, 107, 0.1); /* 给版本号加个极淡的背景色 */
+  padding: 2px 8px;
+  border-radius: 10px;
+}
 </style>
 
 <!-- 全局滚动条样式（建议单独放在一个全局 CSS 文件里，如果必须放这里请保持这样） -->
