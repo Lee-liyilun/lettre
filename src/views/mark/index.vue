@@ -151,8 +151,8 @@
                           :xs="24" 
                           :sm="12" 
                           :md="8" 
-                          :lg="6" 
-                          :xl="2"
+                          :lg="8" 
+                          :xl="6"
                           class="project-col"
                       >
                         <el-card 
@@ -520,7 +520,6 @@ const loadWeeklyOverview = async () => {
         }))
       }))
     }));
-    console.log('processedData:', processedData);
     weeklyData.value = processedData;
   } catch (error) {
     ElMessage.error('加载总览数据失败：' + error)

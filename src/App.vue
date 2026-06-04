@@ -68,6 +68,13 @@ onMounted(async () => {
       updateDialogVisible.value = true
       updateMessage.value = '准备开始下载...'
       showProgress.value = true
+      // 打印下载地址
+      const downloadUrl = update.rawJson.platforms["windows-x86_64"]?.url;
+      if (downloadUrl) {
+        info(`Windows安装包下载地址: ${downloadUrl}`);
+      } else {
+        info("未找到 Windows x86_64 平台的下载链接");
+      }
 
       let downloaded = 0
       let contentLength = 0
