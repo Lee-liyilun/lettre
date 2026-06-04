@@ -95,9 +95,19 @@ const preview = computed(() => marked.parse(value.value || ''))
   left: 0;
 }
 
+.editor-content :deep(.cm-editor) {
+  height: 100% !important;
+  outline: none;
+}
+
+.editor-content :deep(.cm-scroller) {
+  overflow-y: auto !important;
+}
+
 .preview-content {
   position: absolute;
   top: 0;
+  bottom: 0;
   padding: 14px;
   background: #ffffff;
   color: #333;

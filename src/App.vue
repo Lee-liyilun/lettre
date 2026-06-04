@@ -1,15 +1,15 @@
 <template>
-  <div id="app">
+  <div id="lettreApp">
     <router-view />
 
     <!-- 自定义的更新进度弹窗 -->
     <el-dialog
       v-model="updateDialogVisible"
-      title="正在更新"
+      title="版本更新"
       width="400px"
-      :close-on-click-modal="true"
-      :close-on-press-escape="true"
-      :show-close="true"
+      :close-on-click-modal="false"
+      :close-on-press-escape="false"
+      :show-close="false"
     >
       <div style="text-align: center; padding: 20px 0;">
         <p>{{ updateMessage }}</p>
@@ -18,6 +18,14 @@
           :percentage="progressPercentage" 
           :status="progressPercentage === 100 ? 'success' : 'exception'"
         />
+        <!-- 下载完成后显示的重启按钮 -->
+        <el-button 
+          v-if="showRestartButton" 
+          type="primary" 
+          @click="handleInstallAndRelaunch"
+        >
+          立即安装并重启
+        </el-button>
       </div>
     </el-dialog>
   </div>
@@ -27,7 +35,7 @@
 import { onMounted, ref } from 'vue'
 import { ElMessageBox, ElProgress } from 'element-plus'
 import { check } from '@tauri-apps/plugin-updater'
-import { error, info } from '@tauri-apps/plugin-log'
+import { warn, info } from '@tauri-apps/plugin-log'
 import { relaunch } from '@tauri-apps/plugin-process'
 
 // 控制更新进度弹窗的显示
@@ -35,6 +43,8 @@ const updateDialogVisible = ref(false)
 const updateMessage = ref('')
 const showProgress = ref(false)
 const progressPercentage = ref(0)
+const showRestartButton = ref(false)
+let updateObject = null
 
 onMounted(async () => {
   try {
@@ -43,6 +53,7 @@ onMounted(async () => {
     if (update) {
       // 1. 使用 Element Plus 的美观弹窗来询问用户
       info(`发现新版本: v${update.version}`)
+      updateObject = update
       await ElMessageBox.confirm(
         `发现新版本 v${update.version}！\n\n`,
         '版本更新',
@@ -63,7 +74,7 @@ onMounted(async () => {
 
       // 3. 下载并安装，监听详细的事件来更新进度条
       try {
-        await update.downloadAndInstall((event) => {
+        await update.download((event) => {
           switch (event.event) {
             case 'Started':
               contentLength = event.data.contentLength
@@ -71,22 +82,20 @@ onMounted(async () => {
               break
             case 'Progress':
               downloaded += event.data.chunkLength
-              // 计算并更新百分比
-              progressPercentage.value = Math.floor((downloaded / contentLength) * 100)
+              progressPercentage.value = Math.min(100, Math.floor((downloaded / contentLength) * 100))
               updateMessage.value = `正在下载... ${progressPercentage.value}%`
               break
             case 'Finished':
-              updateMessage.value = '下载完成，正在安装并重启应用...'
+              // 下载完成，手动将进度条设置为100%
               progressPercentage.value = 100
+              updateMessage.value = '新版本下载完成！'
+              showProgress.value = false // 隐藏进度条
+              showRestartButton.value = true // 显示重启按钮
               break
           }
         })
-        // 4. 安装完成，重启应用
-        setTimeout(async () => {
-          await relaunch()
-        }, 3000) 
       } catch (downloadErr) {
-        error(`下载或安装更新失败: ${downloadErr}`)
+        warn(`下载或安装更新失败: ${downloadErr}`)
         updateMessage.value = '更新失败，请检查网络后重试'
         progressPercentage.value = 0
         showProgress.value = false
@@ -100,14 +109,30 @@ onMounted(async () => {
     if (err === 'cancel') {
       info('用户选择暂不更新') // 👈 正常记录业务操作
     } else {
-      error(`检查更新失败: ${err}`) 
+      warn(`检查更新失败: ${err}`) 
       updateDialogVisible.value = false
     }
   }
 })
+
+// 用户点击“立即重启”按钮时触发
+const handleInstallAndRelaunch = async () => {
+  updateMessage.value = '正在安装并重启应用...'
+  showRestartButton.value = false // 隐藏按钮，防止重复点击
+  
+  try {
+    // 执行安装
+    await updateObject.install()
+    // 安装成功后重启（在Windows上，install() 触发后应用通常会自动退出并开始安装）
+    await relaunch()
+  } catch (err) {
+    warn(`安装或重启失败: ${err}`)
+    updateMessage.value = '安装失败，请尝试手动重启应用'
+  }
+}
 </script>
 
 <style>
 body { margin: 0; padding: 0; width: 100%; height: 100%; }
-#app { width: 100%; height: 100%; display: flex; flex-direction: column; }
+#lettreApp { width: 100%; height: 100%; display: flex; flex-direction: column; }
 </style>

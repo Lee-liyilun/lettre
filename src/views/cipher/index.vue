@@ -1,7 +1,7 @@
 <template>
   <div class="secret-container">
     <!-- 头部区域 -->
-    <el-row :gutter="20">
+    <el-row>
       <el-col :span="22" :offset="1">
         <div class="header-wrapper">
           <el-page-header @back="goBack">
@@ -24,7 +24,7 @@
     </el-row>
 
     <!-- 主体卡片区域 -->
-    <el-row :gutter="20">
+    <el-row>
       <el-col :span="22" :offset="1">
         <div class="card-wrapper">
           <div class="secret-layout">
@@ -258,11 +258,10 @@ async function importKey() {
 .secret-container {
   min-height: 100vh;
   background: linear-gradient(135deg, #e0f2f1 0%, #b2dfdb 100%);
-  padding: 20px 0 60px;
 }
 
 .header-wrapper {
-  margin-bottom: 25px;
+  margin: 20px 0;
   background: rgba(255, 255, 255, 0.6);
   padding: 15px 20px;
   border-radius: 12px;
@@ -282,13 +281,14 @@ async function importKey() {
   box-shadow: 0 8px 20px rgba(0, 77, 64, 0.08);
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.8);
-  padding: 25px;
+  padding: 20px;
+  margin-bottom: 20px;
 }
 
 .secret-layout {
   display: flex;
   gap: 20px;
-  height: 70vh;
+  height: 75vh;
 }
 
 .secret-sidebar {

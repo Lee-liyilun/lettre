@@ -1,8 +1,8 @@
 <template>
   <div class="calc-container">
     <!-- 头部区域 -->
-    <el-row :gutter="20">
-      <el-col :span="18" :offset="3">
+    <el-row>
+      <el-col :span="20" :offset="2">
         <div class="header-wrapper">
           <el-page-header @back="goBack">
             <template #content>
@@ -14,8 +14,8 @@
     </el-row>
     
     <!-- 标签页区域 -->
-    <el-row :gutter="20">
-      <el-col :span="18" :offset="3">
+    <el-row>
+      <el-col :span="20" :offset="2">
         <div class="tabs-wrapper">
           <el-tabs type="border-card" class="fresh-tabs">
             
@@ -310,13 +310,11 @@ const calculateFreedom = () => {
 .calc-container {
   min-height: 100vh;
   background: linear-gradient(135deg, #e0f2f1 0%, #b2dfdb 100%);
-  padding-bottom: 60px;
-  padding-top: 20px;
 }
 
 /* 头部包装器：增加与下方内容的间距 */
 .header-wrapper {
-  margin-bottom: 25px; /* header与tab之间的间距 */
+  margin: 25px 0;
   background: rgba(255, 255, 255, 0.6);
   padding: 15px 20px;
   border-radius: 12px;
@@ -338,6 +336,7 @@ const calculateFreedom = () => {
   box-shadow: 0 8px 20px rgba(0, 77, 64, 0.08); /* 轻柔的绿色阴影 */
   overflow: hidden; /* 保持圆角整洁 */
   border: 1px solid rgba(255, 255, 255, 0.8);
+  margin-bottom: 20px;
 }
 
 /* 覆盖Element Plus标签页默认样式 */
