@@ -3,9 +3,9 @@
     <!-- 切换工具栏 -->
     <div class="editor-toolbar">
       <el-radio-group v-model="viewMode" size="small" button-style="solid">
-        <el-radio-button label="edit"> 编辑 </el-radio-button>
-        <el-radio-button label="split"> 混合 </el-radio-button>
-        <el-radio-button label="preview"> 预览 </el-radio-button>
+        <el-radio-button value="edit"> 编辑 </el-radio-button>
+        <el-radio-button value="split"> 混合 </el-radio-button>
+        <el-radio-button value="preview"> 预览 </el-radio-button>
       </el-radio-group>
     </div>
 
@@ -55,9 +55,6 @@ const value = computed({
 const lightTheme = EditorView.theme({
   '&': { backgroundColor: '#ffffff', color: '#222' },
   '.cm-gutters': { backgroundColor: '#f0f9f8', color: '#00796b', border: 'none' },
-  '.cm-line': { backgroundColor: '#ffffff' },
-  '.cm-activeLine': { backgroundColor: '#f0f9f8' },
-  '.cm-activeLineGutter': { backgroundColor: '#e0f2f1' },
 })
 
 const extensions = [basicSetup, markdown(), lightTheme]

@@ -38,9 +38,18 @@
               />
 
               <div class="sidebar-list">
-                <el-button type="primary" block @click="create">
-                  新建密语
-                </el-button>
+                <div class="btn-row" :class="{ 'has-export': showExportBtn }">
+                  <el-button type="primary" @click="create">
+                    新建密语
+                  </el-button>
+                  <el-button
+                    v-show="showExportBtn"
+                    class="export-btn"
+                    @click="exportSearchResults"
+                  >
+                    导出密语
+                  </el-button>
+                </div>
 
                 <div
                   v-for="item in list"
@@ -88,14 +97,24 @@
                   保存当前密语
                 </el-button>
 
-                <el-button
-                  type="danger"
-                  size="large"
-                  @click="deleteItem"
-                  v-if="current.id"
-                >
-                  删除该密语
-                </el-button>
+                <div class="right-btns">
+                  <el-button
+                    v-if="current.id"
+                    class="export-btn-large"
+                    size="large"
+                    @click="exportSingleCipher"
+                  >
+                    导出密语
+                  </el-button>
+                  <el-button
+                    type="danger"
+                    size="large"
+                    @click="deleteItem"
+                    v-if="current.id"
+                  >
+                    删除该密语
+                  </el-button>
+                </div>
               </div>
             </div>
           </div>
@@ -110,7 +129,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { invoke } from '@tauri-apps/api/core'
 import { save as fileSave, open as fileOpen } from '@tauri-apps/plugin-dialog'
-import { writeFile, readFile } from '@tauri-apps/plugin-fs'
+import { writeFile, readFile, writeTextFile } from '@tauri-apps/plugin-fs'
 import MdEditor from '@/components/MdEditor.vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
@@ -119,6 +138,7 @@ const goBack = () => router.push('/')
 
 const list = ref([])
 const kw = ref('')
+const showExportBtn = ref(false)
 const current = ref({
   id: '',
   name: '',
@@ -138,6 +158,7 @@ async function doSearch() {
   list.value = kw.value
     ? await invoke('search_cipher', { keyword: kw.value })
     : await invoke('get_all_ciphers', { limit: 10 })
+  showExportBtn.value = !!kw.value && list.value.length > 0
 }
 
 // 保存
@@ -252,6 +273,68 @@ async function importKey() {
     ElMessage.success('密钥导入成功')
   }
 }
+
+// 导出搜索结果为Markdown
+async function exportSearchResults() {
+  if (!showExportBtn.value || list.value.length === 0) return
+
+  const itemsContent = list.value.map(item => {
+    return `## ${item.name || '未命名项目'}
+
+${item.content || ''}
+
+---
+
+`
+  }).join('\n')
+
+  const markdownContent = `# 项目信息
+
+${itemsContent}`
+
+  const path = await fileSave({
+    title: '导出密语',
+    defaultPath: `项目信息_${Date.now()}.md`,
+    filters: [{ name: 'Markdown', extensions: ['md'] }],
+  })
+  if (path) {
+    try {
+      await writeTextFile(path, markdownContent)
+      ElMessage.success('导出成功')
+      showExportBtn.value = false
+      kw.value = ''
+    } catch (error) {
+      ElMessage.error('导出失败：' + (error.message || '未知错误'))
+    }
+  }
+}
+
+// 导出当前单个密语为Markdown
+async function exportSingleCipher() {
+  if (!current.value.id) return
+
+  const markdownContent = `# ${current.value.company || '未命名公司'}
+
+## ${current.value.name || '未命名项目'}
+
+${current.value.content || ''}
+`
+
+  const path = await fileSave({
+    title: '导出密语',
+    defaultPath: `${current.value.name || 'cipher'}.md`,
+    filters: [{ name: 'Markdown', extensions: ['md'] }],
+  })
+  if (path) {
+    try {
+      console.log(markdownContent);
+      await writeTextFile(path, markdownContent)
+      ElMessage.success('导出成功')
+    } catch (error) {
+      ElMessage.error('导出失败：' + (error.message || '未知错误'))
+    }
+  }
+}
 </script>
 
 <style scoped>
@@ -320,8 +403,9 @@ async function importKey() {
 }
 
 .list-item.active {
-  background: #00796b;
+  background: linear-gradient(135deg, #81d4fa 0%, #4fc3f7 100%);
   color: #fff;
+  box-shadow: 0 2px 8px rgba(79, 195, 247, 0.3);
 }
 
 .item-name {
@@ -360,5 +444,50 @@ async function importKey() {
   display: flex;
   justify-content: space-between;
   width: 100%;
+}
+
+.right-btns {
+  display: flex;
+  gap: 12px;
+}
+
+.btn-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.btn-row.has-export {
+  flex-direction: row;
+}
+
+.btn-row.has-export .el-button {
+  flex: 1;
+}
+
+.export-btn {
+  background: linear-gradient(135deg, #81d4fa 0%, #4fc3f7 100%);
+  border: none;
+  color: #fff;
+  font-weight: 500;
+  box-shadow: 0 2px 8px rgba(79, 195, 247, 0.3);
+  transition: all 0.3s ease;
+}
+
+.export-btn:hover {
+  background: linear-gradient(135deg, #4fc3f7 0%, #29b6f6 100%);
+}
+
+.export-btn-large {
+  background: linear-gradient(135deg, #81d4fa 0%, #4fc3f7 100%);
+  border: none;
+  color: #fff;
+  font-weight: 500;
+  box-shadow: 0 2px 8px rgba(79, 195, 247, 0.3);
+  transition: all 0.3s ease;
+}
+
+.export-btn-large:hover {
+  background: linear-gradient(135deg, #4fc3f7 0%, #29b6f6 100%);
 }
 </style>
