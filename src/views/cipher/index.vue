@@ -152,7 +152,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { invoke } from '@tauri-apps/api/core'
 import { save as fileSave, open as fileOpen } from '@tauri-apps/plugin-dialog'
@@ -182,6 +182,22 @@ const current = ref({
 onMounted(async () => {
   await initFirstKey()
   list.value = await invoke('get_all_ciphers', { limit: 10 })
+  
+  // 添加 Ctrl+S 快捷键
+  window.addEventListener('keydown', handleKeydown)
+})
+
+// 键盘事件处理
+function handleKeydown(e) {
+  if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+    e.preventDefault()
+    save()
+  }
+}
+
+onUnmounted(() => {
+  // 移除快捷键监听
+  window.removeEventListener('keydown', handleKeydown)
 })
 
 // 监听内容变化，自动更新目录
@@ -206,29 +222,35 @@ async function save() {
     return
   }
 
-  if (current.value.id) {
-    // 更新
-    await invoke('update_cipher', {
-      cipher: {
-        id: Number(current.value.id),
-        name: current.value.name,
-        company: current.value.company,
-        content: current.value.content,
-      }
-    })
-  } else {
-    // 新增
-    const id = await invoke('add_cipher', {
-      cipher: {
-        name: current.value.name,
-        company: current.value.company,
-        content: current.value.content,
-      }
-    })
-    current.value.id = id
+  try {
+    if (current.value.id) {
+      // 更新
+      await invoke('update_cipher', {
+        cipher: {
+          id: Number(current.value.id),
+          name: current.value.name,
+          company: current.value.company,
+          content: current.value.content,
+        }
+      })
+      ElMessage.success('更新成功')
+    } else {
+      // 新增
+      const id = await invoke('add_cipher', {
+        cipher: {
+          name: current.value.name,
+          company: current.value.company,
+          content: current.value.content,
+        }
+      })
+      current.value.id = id
+      ElMessage.success('新增成功')
+    }
+    // 刷新列表
+    list.value = await invoke('get_all_ciphers', { limit: 10 })
+  } catch (error) {
+    ElMessage.error(current.value.id ? '更新失败：' + (error.message || '未知错误') : '新增失败：' + (error.message || '未知错误'))
   }
-  // 刷新列表
-  list.value = await invoke('get_all_ciphers', { limit: 10 })
 }
 
 // 删除
@@ -304,6 +326,15 @@ function generateToc(content) {
 // 返回列表
 function backToList() {
   showToc.value = false
+  // 清空编辑器内容
+  current.value = {
+    id: '',
+    name: '',
+    company: '',
+    content: '',
+    create_time: '',
+    update_time: ''
+  }
 }
 
 // 滚动到指定标题

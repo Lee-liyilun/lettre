@@ -72,7 +72,10 @@ const lightTheme = EditorView.theme({
 })
 
 const extensions = [basicSetup, markdown(), lightTheme]
-const preview = computed(() => marked.parse(value.value || ''))
+const preview = computed(() => {
+  const result = marked(value.value || '')
+  return result
+})
 
 // 编辑器准备就绪时获取实例
 function handleReady(payload) {
@@ -257,5 +260,36 @@ defineExpose({
   overflow-y: auto;
   word-break: break-all;
   border-left: 1px solid #e0f2f1;
+}
+
+/* 行内代码样式 */
+.preview-content :deep(code) {
+  background: #f3f4f6;
+  color: #374151;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'Consolas', monospace;
+  font-size: 0.9em;
+}
+
+/* 代码块样式 */
+.preview-content :deep(pre) {
+  background: #f9fafb;
+  color: #374151;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  overflow-x: auto;
+  margin: 12px 0;
+  font-family: 'Consolas', monospace;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.preview-content :deep(pre code) {
+  background: transparent;
+  color: inherit;
+  padding: 0;
+  font-size: inherit;
 }
 </style>
