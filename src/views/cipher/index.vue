@@ -30,36 +30,63 @@
           <div class="secret-layout">
             <!-- 左侧搜索 + 列表 -->
             <div class="secret-sidebar">
-              <el-input
-                v-model="kw"
-                placeholder="搜索项目名称/公司/内容"
-                @input="doSearch"
-                clearable
-              />
+              <!-- 搜索 + 列表 -->
+              <template v-if="!showToc">
+                <el-input
+                  v-model="kw"
+                  placeholder="搜索项目名称/公司/内容"
+                  @input="doSearch"
+                  clearable
+                />
 
-              <div class="sidebar-list">
-                <div class="btn-row" :class="{ 'has-export': showExportBtn }">
-                  <el-button type="primary" @click="create">
-                    新建密语
-                  </el-button>
-                  <el-button
-                    v-show="showExportBtn"
-                    class="export-btn"
-                    @click="exportSearchResults"
+                <div class="sidebar-list">
+                  <div class="btn-row" :class="{ 'has-export': showExportBtn }">
+                    <el-button type="primary" @click="create">
+                      新建密语
+                    </el-button>
+                    <el-button
+                      v-show="showExportBtn"
+                      class="export-btn"
+                      @click="exportSearchResults"
+                    >
+                      导出密语
+                    </el-button>
+                  </div>
+
+                  <div
+                    v-for="item in list"
+                    :key="item.id"
+                    class="list-item"
+                    @click="open(item)"
                   >
-                    导出密语
+                    <div class="item-name">{{ item.name }}</div>
+                    <div class="item-company">{{ item.company }}</div>
+                  </div>
+                </div>
+              </template>
+
+              <!-- 目录导航 -->
+              <div v-else class="toc-panel">
+                <div class="toc-header">
+                  <el-button class="back-btn" link @click="backToList">
+                    <el-icon><ArrowLeft /></el-icon>
+                    <span>返回</span>
                   </el-button>
                 </div>
 
-                <div
-                  v-for="item in list"
-                  :key="item.id"
-                  class="list-item"
-                  :class="{ active: current.id === item.id }"
-                  @click="open(item)"
-                >
-                  <div class="item-name">{{ item.name }}</div>
-                  <div class="item-company">{{ item.company }}</div>
+                <div class="toc-list">
+                  <div
+                    v-for="(item, index) in tocList"
+                    :key="index"
+                    class="toc-item"
+                    :class="`toc-level-${item.level}`"
+                    @click="scrollToHeading(item.line)"
+                  >
+                    {{ item.text }}
+                  </div>
+                  <div v-if="tocList.length === 0" class="toc-empty">
+                    暂无目录
+                  </div>
                 </div>
               </div>
             </div>
@@ -89,7 +116,7 @@
               </div>
 
               <!-- MdEditor 组件 -->
-              <MdEditor v-model="current.content" />
+              <MdEditor ref="mdEditorRef" v-model="current.content" />
 
               <!-- 按钮组：保存 + 删除 -->
               <div class="btn-group">
@@ -125,11 +152,12 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { invoke } from '@tauri-apps/api/core'
 import { save as fileSave, open as fileOpen } from '@tauri-apps/plugin-dialog'
-import { writeFile, readFile, writeTextFile } from '@tauri-apps/plugin-fs'
+import { writeFile, readFile } from '@tauri-apps/plugin-fs'
+import { ArrowLeft } from '@element-plus/icons-vue'
 import MdEditor from '@/components/MdEditor.vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
@@ -139,6 +167,9 @@ const goBack = () => router.push('/')
 const list = ref([])
 const kw = ref('')
 const showExportBtn = ref(false)
+const showToc = ref(false)
+const tocList = ref([])
+const mdEditorRef = ref(null)
 const current = ref({
   id: '',
   name: '',
@@ -151,6 +182,13 @@ const current = ref({
 onMounted(async () => {
   await initFirstKey()
   list.value = await invoke('get_all_ciphers', { limit: 10 })
+})
+
+// 监听内容变化，自动更新目录
+watch(() => current.value.content, (newContent) => {
+  if (showToc.value) {
+    generateToc(newContent || '')
+  }
 })
 
 // 搜索
@@ -231,11 +269,46 @@ function create() {
     create_time: '',
     update_time: ''
   }
+  showToc.value = false
+  tocList.value = []
 }
 
 // 打开
 function open(item) {
   current.value = { ...item }
+  generateToc(item.content || '')
+  showToc.value = true
+}
+
+// 生成目录
+function generateToc(content) {
+  if (!content) {
+    tocList.value = []
+    return
+  }
+  const lines = content.split('\n')
+  const toc = []
+  lines.forEach((line, index) => {
+    const match = line.match(/^(#{1,6})\s+(.+)$/)
+    if (match) {
+      toc.push({
+        level: match[1].length,
+        text: match[2].trim(),
+        line: index + 1
+      })
+    }
+  })
+  tocList.value = toc
+}
+
+// 返回列表
+function backToList() {
+  showToc.value = false
+}
+
+// 滚动到指定标题
+function scrollToHeading(lineNumber) {
+  mdEditorRef.value?.scrollToLine(lineNumber, false)
 }
 
 // 首次使用生成密钥
@@ -402,12 +475,6 @@ ${current.value.content || ''}
   background: #e0f2f1;
 }
 
-.list-item.active {
-  background: linear-gradient(135deg, #81d4fa 0%, #4fc3f7 100%);
-  color: #fff;
-  box-shadow: 0 2px 8px rgba(79, 195, 247, 0.3);
-}
-
 .item-name {
   font-weight: 500;
   margin-bottom: 4px;
@@ -416,6 +483,89 @@ ${current.value.content || ''}
 .item-company {
   font-size: 12px;
   opacity: 0.8;
+}
+
+/* 目录导航 */
+.toc-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  gap: 12px;
+}
+
+.toc-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e0f2f1;
+}
+
+.back-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #00796b;
+  font-size: 14px;
+}
+
+.toc-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+  padding-right: 5px;
+}
+
+.toc-item {
+  padding: 8px 10px;
+  background: #f0f9f8;
+  border-radius: 6px;
+  color: #00796b;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-left: 3px solid transparent;
+}
+
+.toc-item:hover {
+  background: #e0f2f1;
+  border-left-color: #4fc3f7;
+}
+
+.toc-level-1 {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.toc-level-2 {
+  padding-left: 20px;
+}
+
+.toc-level-3 {
+  padding-left: 32px;
+  font-size: 12px;
+  opacity: 0.85;
+}
+
+.toc-level-4 {
+  padding-left: 44px;
+  font-size: 12px;
+  opacity: 0.75;
+}
+
+.toc-level-5,
+.toc-level-6 {
+  padding-left: 56px;
+  font-size: 11px;
+  opacity: 0.65;
+}
+
+.toc-empty {
+  padding: 20px;
+  text-align: center;
+  color: #90a4ae;
+  font-size: 13px;
 }
 
 .secret-editor {
