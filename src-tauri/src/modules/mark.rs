@@ -3,6 +3,8 @@ use chrono::{Datelike, Duration, NaiveDate};
 use rusqlite::params;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+// 首先导入 log crate 的宏
+use tauri_plugin_log::log::{info, warn, error, debug, trace};
 
 // 项目结构体
 #[derive(Debug, Serialize, Deserialize)]
@@ -52,6 +54,7 @@ pub struct WeeklyGroup {
 // 获取所有项目
 #[tauri::command]
 pub fn get_all_projects() -> Vec<Project> {
+    info!("调用-get_all_projects");
     let conn = db::init_db();
     let mut stmt = conn.prepare("SELECT project_id, name, create_time, update_time FROM project ORDER BY create_time DESC").unwrap();
 
@@ -72,6 +75,7 @@ pub fn get_all_projects() -> Vec<Project> {
 // 添加项目
 #[tauri::command]
 pub fn add_project(name: String) -> Result<String, String> {
+    info!(r#"调用-add_project-[name]: {}"#, name);
     let conn = db::init_db();
     match conn.execute("INSERT INTO project (name) VALUES (?1)", [&name]) {
         Ok(_) => Ok("添加成功".to_string()),
@@ -82,6 +86,8 @@ pub fn add_project(name: String) -> Result<String, String> {
 // 更新项目
 #[tauri::command]
 pub fn update_project(project_id: i64, name: String) -> Result<String, String> {
+    info!("调用-update_project");
+    debug!(r#"调用-update_project-[SQL-UPDATE]: UPDATE project SET name = '{}', update_time = datetime('now', 'localtime') WHERE project_id = '{}'"#, name, project_id);
     let conn = db::init_db();
     match conn.execute(
         "UPDATE project SET name = ?1, update_time = datetime('now', 'localtime') WHERE project_id = ?2",
@@ -95,6 +101,7 @@ pub fn update_project(project_id: i64, name: String) -> Result<String, String> {
 // 删除项目
 #[tauri::command]
 pub fn delete_project(project_id: i64) -> Result<String, String> {
+    info!(r#"调用-delete_project-[project_id]: {}"#, project_id);
     let conn = db::init_db();
     match conn.execute(
         "DELETE FROM project WHERE project_id = ?1",
@@ -110,8 +117,9 @@ pub fn delete_project(project_id: i64) -> Result<String, String> {
 // 获取所有印记（按创建时间降序）
 #[tauri::command]
 pub fn get_all_marks() -> Vec<Mark> {
+    info!("调用-get_all_marks");
     let conn = db::init_db();
-    let mut stmt = conn.prepare("SELECT mark_id, project_id, category_id, content, create_time, update_time FROM mark ORDER BY create_time DESC").unwrap();
+    let mut stmt = conn.prepare("SELECT mark_id, project_id, category_id, content, create_time, update_time FROM mark WHERE create_time >= date('now', '-2 weeks') ORDER BY create_time DESC").unwrap();
 
     let marks = stmt
         .query_map([], |row| {
@@ -132,6 +140,8 @@ pub fn get_all_marks() -> Vec<Mark> {
 // 添加印记
 #[tauri::command]
 pub fn add_mark(mark: Mark) -> Result<String, String> {
+    info!("调用-add_mark");
+    debug!(r#"调用-add_mark-[SQL-INSERT]: INSERT INTO mark (project_id, category_id, content) VALUES ('{}', '{}', '... ...')"#, mark.project_id, mark.category_id);
     let conn = db::init_db();
     match conn.execute(
         "INSERT INTO mark (project_id, category_id, content) VALUES (?1, ?2, ?3)",
@@ -145,6 +155,8 @@ pub fn add_mark(mark: Mark) -> Result<String, String> {
 // 更新印记
 #[tauri::command]
 pub fn update_mark(mark: Mark) -> Result<String, String> {
+    info!("调用-update_mark");
+    debug!(r#"调用-update_mark-[SQL-UPDATE]: UPDATE mark SET project_id = '{}', category_id = '{}', content = '... ...', update_time = datetime('now', 'localtime') WHERE mark_id = {:?}"#, mark.project_id, mark.category_id, mark.mark_id);
     let conn = db::init_db();
     match conn.execute(
         "UPDATE mark SET project_id = ?1, category_id = ?2, content = ?3, update_time = datetime('now', 'localtime') WHERE mark_id = ?4",
@@ -158,6 +170,7 @@ pub fn update_mark(mark: Mark) -> Result<String, String> {
 // 删除印记
 #[tauri::command]
 pub fn delete_mark(mark_id: i64) -> Result<String, String> {
+    info!(r#"调用-delete_mark-[mark_id]: {}"#, mark_id);
     let conn = db::init_db();
     match conn.execute(
         "DELETE FROM mark WHERE mark_id = ?1",
@@ -171,6 +184,7 @@ pub fn delete_mark(mark_id: i64) -> Result<String, String> {
 // 获取每周总览数据
 #[tauri::command]
 pub fn get_weekly_overview() -> Result<Vec<WeeklyGroup>, String> {
+    info!("调用-get_weekly_overview");
     let conn = db::init_db();
 
     // 1. 查询最近3个月的所有印记及关联信息

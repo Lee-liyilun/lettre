@@ -245,6 +245,7 @@ defineExpose({
 }
 
 .preview-content {
+  box-sizing: border-box;
   position: absolute;
   top: 0;
   bottom: 0;

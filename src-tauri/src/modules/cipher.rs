@@ -4,6 +4,8 @@ use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
 use rand;
+// 首先导入 log crate 的宏
+use tauri_plugin_log::log::{info, warn, error, debug, trace};
 
 // ==============================
 // Cipher 结构体
@@ -125,8 +127,8 @@ fn decrypt(cipher: &[u8]) -> String {
 // ==============================
 #[tauri::command]
 pub fn get_all_ciphers(limit: i64) -> Vec<Cipher> {
+    info!(r#"调用-get_all_ciphers-[limit]: {}"#, limit);
     let conn = db::init_db();
-    
     // 使用 LIMIT 限制返回条数
     let mut stmt = conn
         .prepare("SELECT id, name, company, content, create_time, update_time FROM cipher ORDER BY update_time DESC LIMIT ?")
@@ -149,6 +151,8 @@ pub fn get_all_ciphers(limit: i64) -> Vec<Cipher> {
 
 #[tauri::command]
 pub fn add_cipher(cipher: Cipher) -> Result<String, String> {
+    info!("调用-add_cipher");
+    debug!(r#"调用-add_cipher-[SQL-INSERT]: INSERT INTO cipher (name, company, content) VALUES ('{}', '{:?}', '... ...')"#, cipher.name, cipher.company);
     let conn = db::init_db();
     let encrypted = encrypt(&cipher.content);
 
@@ -163,6 +167,8 @@ pub fn add_cipher(cipher: Cipher) -> Result<String, String> {
 
 #[tauri::command]
 pub fn update_cipher(cipher: Cipher) -> Result<String, String> {
+    info!("调用-update_cipher");
+    debug!(r#"调用-update_cipher-[SQL-UPDATE]: UPDATE cipher SET name='{}', company='{:?}', content='... ...', update_time=datetime('now','localtime') WHERE id={}"#, cipher.name, cipher.company, cipher.id.unwrap_or(0));
     let conn = db::init_db();
     let encrypted = encrypt(&cipher.content);
 
@@ -182,6 +188,7 @@ pub fn update_cipher(cipher: Cipher) -> Result<String, String> {
 
 #[tauri::command]
 pub fn delete_cipher(id: i64) -> Result<String, String> {
+    info!(r#"调用-delete_cipher-[id]: {}"#, id);
     let conn = db::init_db();
     match conn.execute("DELETE FROM cipher WHERE id=?1", [id]) {
         Ok(_) => Ok("删除成功".to_string()),
@@ -191,6 +198,7 @@ pub fn delete_cipher(id: i64) -> Result<String, String> {
 
 #[tauri::command]
 pub fn search_cipher(keyword: String) -> Vec<Cipher> {
+    info!(r#"调用-search_cipher-[keyword]: {}"#, keyword);
     let all = get_all_ciphers(99999999);
     let kw = keyword.to_lowercase();
 
