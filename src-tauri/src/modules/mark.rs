@@ -119,7 +119,7 @@ pub fn delete_project(project_id: i64) -> Result<String, String> {
 pub fn get_all_marks() -> Vec<Mark> {
     info!("调用-get_all_marks");
     let conn = db::init_db();
-    let mut stmt = conn.prepare("SELECT mark_id, project_id, category_id, content, create_time, update_time FROM mark WHERE create_time >= date('now', '-2 weeks') ORDER BY create_time DESC").unwrap();
+    let mut stmt = conn.prepare("SELECT mark_id, project_id, category_id, content, create_time, update_time FROM mark WHERE create_time >= date('now', '-14 days') ORDER BY create_time DESC").unwrap();
 
     let marks = stmt
         .query_map([], |row| {
