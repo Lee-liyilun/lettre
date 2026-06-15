@@ -245,6 +245,8 @@ async function save() {
       })
       current.value.id = id
       ElMessage.success('新增成功')
+      showToc.value = true  // 切换到目录导航
+      generateToc(current.value.content || '')  // 生成目录
     }
     // 刷新列表
     list.value = await invoke('get_all_ciphers', { limit: 10 })
@@ -298,6 +300,9 @@ function create() {
 // 打开
 function open(item) {
   current.value = { ...item }
+  if (item.id) {
+    current.value.id = String(item.id)  // 确保类型一致
+  }
   generateToc(item.content || '')
   showToc.value = true
 }
@@ -604,6 +609,7 @@ ${current.value.content || ''}
   display: flex;
   flex-direction: column;
   gap: 12px;
+  min-width: 0;
 }
 
 .input-row {

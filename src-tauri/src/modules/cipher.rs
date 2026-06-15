@@ -160,7 +160,11 @@ pub fn add_cipher(cipher: Cipher) -> Result<String, String> {
         "INSERT INTO cipher (name, company, content) VALUES (?1, ?2, ?3)",
         params![cipher.name, cipher.company, encrypted],
     ) {
-        Ok(_) => Ok("添加成功".to_string()),
+        Ok(_) => {
+            // 获取新插入记录的 ID
+            let id = conn.last_insert_rowid();
+            Ok(id.to_string())
+        },
         Err(e) => Err(format!("添加失败: {}", e)),
     }
 }

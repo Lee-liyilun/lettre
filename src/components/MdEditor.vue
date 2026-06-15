@@ -71,7 +71,11 @@ const lightTheme = EditorView.theme({
   '.cm-gutters': { backgroundColor: '#f0f9f8', color: '#00796b', border: 'none' },
 })
 
-const extensions = [basicSetup, markdown(), lightTheme]
+const extensions = [
+  basicSetup, 
+  markdown(), 
+  lightTheme
+]
 const preview = computed(() => {
   const result = marked(value.value || '')
   return result
@@ -88,6 +92,8 @@ function handleReady(payload) {
       syncScrollFromEditor()
     }
   })
+  
+  
 }
 
 // 从编辑器滚动同步到预览
@@ -245,6 +251,12 @@ defineExpose({
 
 .editor-content :deep(.cm-scroller) {
   overflow-y: auto !important;
+}
+
+.editor-content :deep(.cm-line) {
+  word-break: break-all;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
 }
 
 .preview-content {

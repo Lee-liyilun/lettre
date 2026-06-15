@@ -1,6 +1,6 @@
 [package]
 name = "lettre"
-version = "0.2.7"
+version = "0.2.8"
 description = "🎉 A tool box for you"
 authors = ["1072966772@qq.com"]
 edition = "2021"
