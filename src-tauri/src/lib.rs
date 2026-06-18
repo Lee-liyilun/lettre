@@ -13,6 +13,7 @@ use tauri_plugin_log::log::{LevelFilter};
 // 导出给前端
 pub use modules::cipher::*;
 pub use modules::mark::*;
+pub use modules::save::*;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -75,6 +76,9 @@ pub fn run() {
             modules::cipher::export_key,
             modules::cipher::generate_first_key,
             modules::cipher::check_key_exists,
+
+            // Save
+            modules::save::get_stock_list,
         ])
 
         // 运行

@@ -6,6 +6,7 @@ import IndexPage from '../views/index.vue'      // 首页/导航页
 import CalcPage from '../views/calc/index.vue'   // 简财
 import MarkPage from '../views/mark/index.vue'   // 印记 
 import CipherPage from '../views/cipher/index.vue'   // 密语 
+import SavePage from '../views/save/index.vue'   // 锦投
 
 const router = createRouter({
   history: createWebHistory(),
@@ -35,6 +36,11 @@ const router = createRouter({
       path: '/cipher',
       name: 'Cipher',
       component: CipherPage
+    },
+    {
+      path: '/save',
+      name: 'Save',
+      component: SavePage
     }
   ]
 })

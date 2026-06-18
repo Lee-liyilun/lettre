@@ -1,6 +1,6 @@
 [package]
 name = "lettre"
-version = "0.2.8"
+version = "0.3.0"
 description = "🎉 A tool box for you"
 authors = ["1072966772@qq.com"]
 edition = "2021"
@@ -30,6 +30,7 @@ tauri-plugin-dialog = "2.7.1"
 tauri-plugin-fs = "2.5.1"
 tauri-plugin-log = "2.8.0"
 tauri-plugin-process = "2.3.1"
+reqwest = { version = "0.13.4", features = ["json"] }
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-updater = "2"
