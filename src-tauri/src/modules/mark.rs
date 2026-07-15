@@ -49,6 +49,14 @@ pub struct WeeklyGroup {
     pub projects: Vec<ProjectGroup>,
 }
 
+// 搜索结果包装器
+#[derive(Debug, Serialize, Deserialize)]
+pub struct SearchResults {
+    pub search_type: String, // "week" 或 "project"
+    pub weekly_data: Vec<WeeklyGroup>,
+    pub project_data: Vec<ProjectGroup>,
+}
+
 // ========== 项目相关命令 ==========
 
 // 获取所有项目
@@ -298,4 +306,181 @@ fn get_week_end(start_str: &str) -> String {
     let start = NaiveDate::parse_from_str(start_str, "%Y-%m-%d").unwrap();
     let end = start + Duration::days(6);
     end.format("%Y-%m-%d").to_string()
+}
+
+// 搜索印记（按日期范围和项目）
+#[tauri::command]
+pub fn search_marks(start_date: String, end_date: String, project_id: Option<i64>) -> Result<SearchResults, String> {
+    info!("调用-search_marks, start_date: {}, end_date: {}, project_id: {:?}", start_date, end_date, project_id);
+    let conn = db::init_db();
+
+    let mut where_clauses = Vec::new();
+    let mut params: Vec<Box<dyn rusqlite::ToSql>> = Vec::new();
+
+    if !start_date.is_empty() {
+        where_clauses.push("m.create_time >= ?");
+        params.push(Box::new(start_date));
+    }
+    if !end_date.is_empty() {
+        where_clauses.push("m.create_time <= ?");
+        params.push(Box::new(end_date.to_string() + " 23:59:59"));
+    }
+    if project_id.is_some() && project_id != Some(0) {
+        let project_id_value = project_id.unwrap();
+        
+        if project_id_value > 0 {
+            where_clauses.push("m.project_id = ?");
+            params.push(Box::new(project_id_value));
+        }
+    }
+
+    let where_sql = if where_clauses.is_empty() {
+        String::new()
+    } else {
+        format!("WHERE {}", where_clauses.join(" AND "))
+    };
+
+    let sql = format!(
+        "SELECT 
+            m.create_time,
+            p.project_id,
+            p.name,
+            m.category_id,
+            m.content
+         FROM mark m
+         JOIN project p ON m.project_id = p.project_id
+         {}
+         ORDER BY m.create_time DESC",
+        where_sql
+    );
+
+    let mut stmt = conn.prepare(&sql).map_err(|e| e.to_string())?;
+
+    let params_slice: Vec<&dyn rusqlite::ToSql> = params.iter().map(|p| p.as_ref()).collect();
+
+    let marks = stmt
+        .query_map(params_slice.as_slice(), |row| {
+            Ok((
+                row.get::<_, String>(0)?,
+                row.get::<_, i64>(1)?,
+                row.get::<_, String>(2)?,
+                row.get::<_, i32>(3)?,
+                row.get::<_, String>(4)?,
+            ))
+        })
+        .map_err(|e| e.to_string())?;
+
+    if let Some(id) = project_id {
+        if id > 0 {
+            let mut project_map: HashMap<i64, HashMap<i32, (String, Vec<String>)>> = HashMap::new();
+
+            for mark in marks {
+                let (_, project_id, project_name, category_id, content) =
+                    mark.map_err(|e| e.to_string())?;
+
+                let category_map = project_map.entry(project_id).or_insert_with(HashMap::new);
+                let (_, contents) = category_map
+                    .entry(category_id)
+                    .or_insert_with(|| (project_name, Vec::new()));
+
+                contents.push(content);
+            }
+
+            let project_data: Vec<ProjectGroup> = project_map
+                .iter()
+                .map(|(project_id, category_map)| {
+                    let first_category = category_map.values().next().unwrap();
+                    let project_name = first_category.0.clone();
+
+                    let mut categories: Vec<CategoryGroup> = category_map
+                        .iter()
+                        .map(|(category_id, (_, contents))| CategoryGroup {
+                            category_id: *category_id,
+                            contents: contents.clone(),
+                        })
+                        .collect();
+
+                    categories.sort_by_key(|c| c.category_id);
+
+                    ProjectGroup {
+                        project_id: *project_id,
+                        project_name,
+                        categories,
+                    }
+                })
+                .collect();
+
+            return Ok(SearchResults {
+                search_type: "project".to_string(),
+                weekly_data: Vec::new(),
+                project_data,
+            });
+        }
+    }
+
+    let mut weekly_map: HashMap<String, HashMap<i64, HashMap<i32, (String, Vec<String>)>>> =
+        HashMap::new();
+
+    for mark in marks {
+        let (create_time, project_id, project_name, category_id, content) =
+            mark.map_err(|e| e.to_string())?;
+
+        let date_part = create_time.split(' ').next().unwrap_or(&create_time);
+        let week_start = get_week_start(date_part);
+
+        let project_map = weekly_map
+            .entry(week_start.clone())
+            .or_insert_with(HashMap::new);
+        let category_map = project_map.entry(project_id).or_insert_with(HashMap::new);
+        let (_, contents) = category_map
+            .entry(category_id)
+            .or_insert_with(|| (project_name, Vec::new()));
+
+        contents.push(content);
+    }
+
+    let mut weekly_data: Vec<WeeklyGroup> = weekly_map
+        .iter()
+        .map(|(week_start, project_map)| {
+            let week_end = get_week_end(week_start);
+
+            let projects: Vec<ProjectGroup> = project_map
+                .iter()
+                .map(|(project_id, category_map)| {
+                    let first_category = category_map.values().next().unwrap();
+                    let project_name = first_category.0.clone();
+
+                    let mut categories: Vec<CategoryGroup> = category_map
+                        .iter()
+                        .map(|(category_id, (_, contents))| CategoryGroup {
+                            category_id: *category_id,
+                            contents: contents.clone(),
+                        })
+                        .collect();
+
+                    categories.sort_by_key(|c| c.category_id);
+
+                    ProjectGroup {
+                        project_id: *project_id,
+                        project_name,
+                        categories,
+                    }
+                })
+                .collect();
+
+            WeeklyGroup {
+                week_start: week_start.clone(),
+                week_end,
+                projects,
+            }
+        })
+        .collect();
+
+    weekly_data.sort_by(|a, b| b.week_start.cmp(&a.week_start));
+
+    Ok(SearchResults {
+        search_type: "week".to_string(),
+        weekly_data,
+        project_data: Vec::new(),
+    })
 }

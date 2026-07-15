@@ -65,6 +65,7 @@ pub fn run() {
             modules::mark::update_mark,
             modules::mark::delete_mark,
             modules::mark::get_weekly_overview,
+            modules::mark::search_marks,
 
             // Cipher
             modules::cipher::get_all_ciphers,

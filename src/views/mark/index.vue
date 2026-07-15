@@ -185,8 +185,48 @@
               </template>
               <div class="tab-content">
                 <div class="overview-section">
-                  <el-empty v-if="weeklyData.length === 0" description="暂无数据" />
-                  <div v-else class="week-wrap">
+                  <div class="search-section">
+                    <div class="search-row">
+                      <el-form-item label="日期范围">
+                        <el-date-picker
+                          v-model="dateRange"
+                          type="daterange"
+                          range-separator="至"
+                          start-placeholder="开始日期"
+                          end-placeholder="结束日期"
+                          value-format="YYYY-MM-DD"
+                          :disabled-date="disabledDate"
+                          class="search-date-picker"
+                        />
+                      </el-form-item>
+                    </div>
+                    <div class="search-row">
+                      <el-form-item label="选择项目">
+                        <el-select
+                          v-model="searchProjectId"
+                          placeholder="全部项目"
+                          filterable
+                          class="search-select"
+                        >
+                          <el-option label="全部项目" :value="-1" />
+                          <el-option
+                            v-for="project in projects"
+                            :key="project.project_id"
+                            :label="project.name"
+                            :value="project.project_id"
+                          />
+                        </el-select>
+                      </el-form-item>
+                    </div>
+                    <div class="search-actions">
+                      <el-button type="primary" @click="handleSearch">搜索</el-button>
+                      <el-button @click="resetSearch">重置</el-button>
+                    </div>
+                  </div>
+                  <el-empty v-if="(searchType === 'week' && weeklyData.length === 0) || (searchType === 'project' && projectData.length === 0)" description="暂无数据" />
+                  
+                  <!-- 按周分组显示 -->
+                  <div v-if="searchType === 'week' && weeklyData.length > 0" class="week-wrap">
                     <div
                       v-for="(week, weekIdx) in weeklyData"
                       :key="weekIdx"
@@ -222,6 +262,41 @@
                             >
                               {{ idx + 1 }}、{{ item }}
                             </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- 按项目分组显示 -->
+                  <div v-if="searchType === 'project' && projectData.length > 0" class="week-wrap">
+                    <div
+                      class="week-card"
+                      v-for="project in projectData"
+                      :key="project.project_id"
+                    >
+                      <div class="week-date-title">
+                        <span>{{ project.project_name }}</span>
+                        <div class="copy-btn-wrap" @click="copyProjectContent(project)">
+                          📋 复制项目内容
+                        </div>
+                      </div>
+
+                      <div
+                        class="category-wrap"
+                        v-for="category in project.categories"
+                        :key="category.category_id"
+                      >
+                        <span class="category-label" :class="getCategoryClass(category.category_id)">
+                          {{ getCategoryName(category.category_id) }}
+                        </span>
+                        <div class="content-list">
+                          <div 
+                            class="content-line"
+                            v-for="(item, idx) in category.contents" 
+                            :key="idx"
+                          >
+                            {{ idx + 1 }}、{{ item }}
                           </div>
                         </div>
                       </div>
@@ -271,6 +346,51 @@ const loadProjects = async () => {
   } catch (error) {
     ElMessage.error('加载项目失败：' + error)
   }
+}
+
+// ========== 搜索相关数据和方法 ==========
+const dateRange = ref([])
+const searchProjectId = ref(-1)
+const searchType = ref('week')
+const projectData = ref([])
+
+// 禁用未来日期
+const disabledDate = (time) => {
+  return time.getTime() > Date.now()
+}
+
+// 搜索印记
+const handleSearch = async () => {
+  try {
+    const startDate = dateRange.value[0] || ''
+    const endDate = dateRange.value[1] || ''
+    const projectId = searchProjectId.value
+    
+    const result = await invoke('search_marks', {
+      startDate,
+      endDate,
+      projectId
+    })
+    
+    if (result.search_type === 'project') {
+      searchType.value = 'project'
+      projectData.value = result.project_data
+      weeklyData.value = []
+    } else {
+      searchType.value = 'week'
+      weeklyData.value = result.weekly_data
+      projectData.value = []
+    }
+  } catch (error) {
+    ElMessage.error('搜索失败：' + error)
+  }
+}
+
+// 重置搜索
+const resetSearch = () => {
+  dateRange.value = []
+  searchProjectId.value = -1
+  loadWeeklyOverview()
 }
 
 // 添加项目
@@ -539,7 +659,6 @@ const getCategoryClass = (categoryId) => {
 const copyWeekContent = (week) => {
   let text = ''
   
-  // 拼接复制文本（和你要的格式完全一致）
   week.projects.forEach(project => {
     text += project.project_name + '\n'
     
@@ -553,7 +672,27 @@ const copyWeekContent = (week) => {
     text += '\n'
   })
 
-  // 复制到剪贴板
+  navigator.clipboard.writeText(text.trim()).then(() => {
+    ElMessage.success('复制成功！')
+  }).catch(() => {
+    ElMessage.error('复制失败，请手动复制')
+  })
+}
+
+// 一键复制项目内容
+const copyProjectContent = (project) => {
+  let text = ''
+  
+  text += project.project_name + '\n'
+  
+  project.categories.forEach(category => {
+    text += getCategoryName(category.category_id) + '\n'
+    
+    category.contents.forEach((item, idx) => {
+      text += `${idx + 1}、${item}\n`
+    })
+  })
+
   navigator.clipboard.writeText(text.trim()).then(() => {
     ElMessage.success('复制成功！')
   }).catch(() => {
@@ -780,6 +919,7 @@ watch(activeTab, (newTab) => {
 
 .project-info {
   flex: 1;
+  text-align: center;
 }
 
 .project-name {
@@ -797,12 +937,52 @@ watch(activeTab, (newTab) => {
 .project-actions {
   display: flex;
   gap: 10px;
+  justify-content: center;
+  margin-top: 5px;
 }
 
 /* 总览区域 - 小清新主题 */
 .overview-section {
   padding: 10px;
 }
+
+/* 搜索区域 */
+.search-section {
+  margin-bottom: 20px;
+  padding: 15px;
+  background: #f0f9f8;
+  border-radius: 12px;
+  border: 1px solid #e0f2f1;
+}
+
+.search-row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 15px;
+}
+
+.search-row :deep(.el-form-item) {
+  margin-bottom: 0;
+}
+
+.search-row :deep(.el-form-item__label) {
+  margin-right: 8px;
+}
+
+.search-date-picker {
+  width: 300px;
+}
+
+.search-select {
+  width: 200px;
+}
+
+.search-actions {
+  display: flex;
+  gap: 10px;
+}
+
 .week-wrap {
   display: flex;
   flex-direction: column;
